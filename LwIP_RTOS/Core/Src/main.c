@@ -48,6 +48,8 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 osThreadId defaultTaskHandle;
+osThreadId LEDTaskHandle;
+osThreadId LD2TaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -58,6 +60,8 @@ static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 void StartDefaultTask(void const * argument);
+void LedTaskInit(void const * argument);
+void LD2Task_Init(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -125,6 +129,14 @@ int main(void)
   /* definition and creation of defaultTask */
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* definition and creation of LEDTask */
+  osThreadDef(LEDTask, LedTaskInit, osPriorityLow, 0, 128);
+  LEDTaskHandle = osThreadCreate(osThread(LEDTask), NULL);
+
+  /* definition and creation of LD2Task */
+  osThreadDef(LD2Task, LD2Task_Init, osPriorityLow, 0, 128);
+  LD2TaskHandle = osThreadCreate(osThread(LD2Task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -336,13 +348,52 @@ void StartDefaultTask(void const * argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
-  printf("LWIP Configurado...");
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_LedTaskInit */
+/**
+* @brief Function implementing the LEDTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LedTaskInit */
+void LedTaskInit(void const * argument)
+{
+  /* USER CODE BEGIN LedTaskInit */
+  /* Infinite loop */
+  for(;;)
+  {
+	  HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
+    osDelay(500);
+  }
+  /* USER CODE END LedTaskInit */
+}
+
+/* USER CODE BEGIN Header_LD2Task_Init */
+/**
+* @brief Function implementing the LD2Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LD2Task_Init */
+void LD2Task_Init(void const * argument)
+{
+  /* USER CODE BEGIN LD2Task_Init */
+  /* Infinite loop */
+  for(;;)
+  {
+	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	  osDelay(250);
+	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+	  osDelay(250);
+  }
+  /* USER CODE END LD2Task_Init */
 }
 
 /**
