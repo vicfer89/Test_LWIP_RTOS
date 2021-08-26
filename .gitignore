@@ -1,0 +1,9 @@
+# Fichero de ignores para STM32
+
+.metadata/
+Debug/
+.settings/
+*.launch
+*.mxproject
+*.cproject
+*.project
