@@ -346,7 +346,7 @@ void UDP_Send_Thread(void)
 	IP4_ADDR(&ipto,172,16,0,2);
 
 	conn = netconn_new(NETCONN_UDP);
-	netconn_connect(conn, &ipto, 49000);
+	//netconn_connect(conn, &ipto, 49000);
 
 	u8_t dataraw[] = "Hola UDP RTOS\n";
 
@@ -355,7 +355,7 @@ void UDP_Send_Thread(void)
 		outbuf = netbuf_new();
 		data = netbuf_alloc(outbuf, 100);
 		memcpy(data, dataraw, strlen(dataraw));
-		netconn_send(conn, outbuf);
+		netconn_sendto(conn, outbuf, &ipto, 49000);
 		netbuf_free(outbuf);
 		netbuf_delete(outbuf);
 
