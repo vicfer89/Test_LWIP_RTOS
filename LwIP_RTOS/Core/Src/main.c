@@ -336,32 +336,31 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void UDP_Send_Thread(void)
 {
+	// Creamos estructuras de datos necesarias para los envíos
 	 struct netconn *conn;
-	 err_t err;
 	 struct netbuf *outbuf;
-	 u8_t *data;
+	 u8_t dataraw[] = "Hola UDP RTOS\n";
 
+	 // Generamos IP para envío de datos
+	 ip_addr_t ipto;
+	 IP4_ADDR(&ipto,172,16,0,2);
 
-	ip_addr_t ipto;
-	IP4_ADDR(&ipto,172,16,0,2);
+	 // Creamos conexión UDP con netconn
+	 conn = netconn_new(NETCONN_UDP);
 
-	conn = netconn_new(NETCONN_UDP);
-	//netconn_connect(conn, &ipto, 49000);
+	 // Creamos buffer para envío de datos de tipo netbuf
+	 outbuf = netbuf_new();
+	 // referenciamos cadena de texto al buffer
+	 netbuf_ref(outbuf, dataraw, sizeof(dataraw));
 
-	u8_t dataraw[] = "Hola UDP RTOS\n";
-
-	for(;;)
-	{
-		outbuf = netbuf_new();
-		data = netbuf_alloc(outbuf, 100);
-		memcpy(data, dataraw, strlen(dataraw));
-		netconn_sendto(conn, outbuf, &ipto, 49000);
-		netbuf_free(outbuf);
-		netbuf_delete(outbuf);
-
-		printf("Dato enviado...\n");
-		osDelay(500); // esperamos medio segundo
-	}
+	 for(;;)
+	 {
+		 // Enviamos datos
+		 netconn_sendto(conn, outbuf, &ipto, 49000);
+		 // Indicamos con un LED que el envío se ha hecho (parpadeo)
+		 HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		 osDelay(500);
+	 }
 }
 /* USER CODE END 4 */
 
@@ -400,7 +399,7 @@ void LedTaskInit(void const * argument)
   for(;;)
   {
 	  HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-    osDelay(500);
+    osDelay(1000);
   }
   /* USER CODE END LedTaskInit */
 }
@@ -419,8 +418,6 @@ void LD2Task_Init(void const * argument)
   for(;;)
   {
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  osDelay(250);
-	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 	  osDelay(250);
   }
   /* USER CODE END LD2Task_Init */
