@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "lwip/api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -333,7 +334,35 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void UDP_Send_Thread(void)
+{
+	 struct netconn *conn;
+	 err_t err;
+	 struct netbuf *outbuf;
+	 u8_t *data;
 
+
+	ip_addr_t ipto;
+	IP4_ADDR(&ipto,172,16,0,2);
+
+	conn = netconn_new(NETCONN_UDP);
+	netconn_connect(conn, &ipto, 49000);
+
+	u8_t dataraw[] = "Hola UDP RTOS\n";
+
+	for(;;)
+	{
+		outbuf = netbuf_new();
+		data = netbuf_alloc(outbuf, 100);
+		memcpy(data, dataraw, strlen(dataraw));
+		netconn_send(conn, outbuf);
+		netbuf_free(outbuf);
+		netbuf_delete(outbuf);
+
+		printf("Dato enviado...\n");
+		osDelay(500); // esperamos medio segundo
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -348,6 +377,7 @@ void StartDefaultTask(void const * argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+  sys_thread_new("UDP_Send", UDP_Send_Thread, NULL, DEFAULT_THREAD_STACKSIZE, osPriorityAboveNormal); // Crea la tarea de servicio para UDP
   /* Infinite loop */
   for(;;)
   {
