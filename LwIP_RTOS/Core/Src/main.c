@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "lwip/api.h"
+#include "lwip/sockets.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -348,6 +349,20 @@ void UDP_Send_Thread(void)
 	 // Creamos conexión UDP con netconn
 	 conn = netconn_new(NETCONN_UDP);
 
+	 int s = socket(AF_INET, SOCK_DGRAM, 0);
+	 struct sockaddr_in addr, cliaddr;
+	 memset(&addr, 0, sizeof(addr));
+	 memset(&cliaddr, 0, sizeof(cliaddr));
+	 addr.sin_family = AF_INET;
+	 addr.sin_addr.s_addr = IP_ADDR_ANY;
+	 addr.sin_port = htons(60000);
+
+	 cliaddr.sin_family = AF_INET;
+	 cliaddr.sin_addr.s_addr = inet_addr("172.16.0.2");
+	 cliaddr.sin_port = htons(49002);
+
+	 int b = bind(s, (const struct sockaddr *) &addr, sizeof(addr));
+
 	 // Creamos buffer para envío de datos de tipo netbuf
 	 outbuf = netbuf_new();
 	 // referenciamos cadena de texto al buffer
@@ -357,7 +372,10 @@ void UDP_Send_Thread(void)
 	 {
 		 // Enviamos datos
 		 netconn_sendto(conn, outbuf, &ipto, 49000);
+		 netconn_sendto(conn, outbuf, &ipto, 49001);
+		 osDelay(500);
 		 // Indicamos con un LED que el envío se ha hecho (parpadeo)
+		 sendto(s, dataraw, strlen(dataraw), MSG_DONTWAIT, (const struct sockaddr *) &cliaddr, sizeof(cliaddr));
 		 HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		 osDelay(500);
 	 }
