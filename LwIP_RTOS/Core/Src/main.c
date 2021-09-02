@@ -335,11 +335,51 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+int Eth_UDP_Init(int port)
+{
+	int on = 1; // On value for SO_BROADCAST
+
+	struct sockaddr_in sockin;
+
+	int sd = socket(AF_INET, SOCK_DGRAM, 0); // Init a Socket descriptor
+	memset((uint8_t *) &sockin, 0, sizeof(sockin)); // Reset all sockin values to zero
+	sockin.sin_family = AF_INET;
+	sockin.sin_port = htons(port); // htons() converts int to host port information
+	/* Bind a name to the socket */
+	if( bind(sd, (struct sockaddr*) &sockin, sizeof(sockin)) == -1 )
+	{
+		printf("Error on socket binding: %d \n", port);
+		return 0;
+	}
+	printf("Socket binded for port %d \n", port);
+
+	/* Socket options:
+	 * 	- SOL_SOCKET: To manipulate options at "Socket" level
+	 * 	- SO_BROADCAST: To send data to more than one destination */
+	setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
+
+	return sd;	// returns socket descriptor
+}
+
+long UDP_Send(int sd, char *buf, int buflen, char *ipdest, int portdest)
+{
+
+	struct sockaddr_in servaddr; // Destination descriptor
+
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_port = htons(portdest);
+	servaddr.sin_addr.s_addr = inet_addr(ipdest);
+
+	return sendto(sd, buf, buflen, 0, (struct sockaddr*) &servaddr, sizeof(servaddr) );	// send to an specific source
+
+}
+
 void UDP_Send_Thread(void)
 {
 	// Creamos estructuras de datos necesarias para los envíos
 	 struct netconn *conn;
 	 struct netbuf *outbuf;
+	 int sd, sd2;
 	 u8_t dataraw[] = "Hola UDP RTOS\n";
 
 	 // Generamos IP para envío de datos
@@ -348,20 +388,8 @@ void UDP_Send_Thread(void)
 
 	 // Creamos conexión UDP con netconn
 	 conn = netconn_new(NETCONN_UDP);
-
-	 int s = socket(AF_INET, SOCK_DGRAM, 0);
-	 struct sockaddr_in addr, cliaddr;
-	 memset(&addr, 0, sizeof(addr));
-	 memset(&cliaddr, 0, sizeof(cliaddr));
-	 addr.sin_family = AF_INET;
-	 addr.sin_addr.s_addr = IP_ADDR_ANY;
-	 addr.sin_port = htons(60000);
-
-	 cliaddr.sin_family = AF_INET;
-	 cliaddr.sin_addr.s_addr = inet_addr("172.16.0.2");
-	 cliaddr.sin_port = htons(49002);
-
-	 int b = bind(s, (const struct sockaddr *) &addr, sizeof(addr));
+	 sd = Eth_UDP_Init(60000);
+	 sd2 = Eth_UDP_Init(50000);
 
 	 // Creamos buffer para envío de datos de tipo netbuf
 	 outbuf = netbuf_new();
@@ -373,9 +401,10 @@ void UDP_Send_Thread(void)
 		 // Enviamos datos
 		 netconn_sendto(conn, outbuf, &ipto, 49000);
 		 netconn_sendto(conn, outbuf, &ipto, 49001);
+		 UDP_Send(sd, dataraw, strlen(dataraw), "172.16.0.2", 60001);
+		 UDP_Send(sd2, "Hola SD2", strlen("Hola SD2"), "172.16.0.2", 60001);
 		 osDelay(500);
 		 // Indicamos con un LED que el envío se ha hecho (parpadeo)
-		 sendto(s, dataraw, strlen(dataraw), MSG_DONTWAIT, (const struct sockaddr *) &cliaddr, sizeof(cliaddr));
 		 HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		 osDelay(500);
 	 }
