@@ -27,6 +27,7 @@
 #include "stdio.h"
 #include "lwip/api.h"
 #include "lwip/sockets.h"
+#include "Sockets_UDP.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -335,45 +336,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int Eth_UDP_Init(int port)
-{
-	int on = 1; // On value for SO_BROADCAST
-
-	struct sockaddr_in sockin;
-
-	int sd = socket(AF_INET, SOCK_DGRAM, 0); // Init a Socket descriptor
-	memset((uint8_t *) &sockin, 0, sizeof(sockin)); // Reset all sockin values to zero
-	sockin.sin_family = AF_INET;
-	sockin.sin_port = htons(port); // htons() converts int to host port information
-	/* Bind a name to the socket */
-	if( bind(sd, (struct sockaddr*) &sockin, sizeof(sockin)) == -1 )
-	{
-		printf("Error on socket binding: %d \n", port);
-		return 0;
-	}
-	printf("Socket binded for port %d \n", port);
-
-	/* Socket options:
-	 * 	- SOL_SOCKET: To manipulate options at "Socket" level
-	 * 	- SO_BROADCAST: To send data to more than one destination */
-	setsockopt(sd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
-
-	return sd;	// returns socket descriptor
-}
-
-long UDP_Send(int sd, char *buf, int buflen, char *ipdest, int portdest)
-{
-
-	struct sockaddr_in servaddr; // Destination descriptor
-
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(portdest);
-	servaddr.sin_addr.s_addr = inet_addr(ipdest);
-
-	return sendto(sd, buf, buflen, 0, (struct sockaddr*) &servaddr, sizeof(servaddr) );	// send to an specific source
-
-}
-
 void UDP_Send_Thread(void)
 {
 	// Creamos estructuras de datos necesarias para los envíos
