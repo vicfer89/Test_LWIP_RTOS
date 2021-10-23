@@ -53,7 +53,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 osThreadId defaultTaskHandle;
 osThreadId LEDTaskHandle;
 osThreadId LD2TaskHandle;
-osThreadId UDPReceiveTaskHandle;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -68,7 +68,7 @@ void LedTaskInit(void const * argument);
 void LD2Task_Init(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void UDP_Receive_Thread(void const * argument);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -144,8 +144,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadDef(UDP_Receive, UDP_Receive_Thread, osPriorityHigh, 0, 128);
-  UDPReceiveTaskHandle = osThreadCreate(osThread(UDP_Receive), NULL);
+  //osThreadDef(UDP_Receive, UDP_Receive_Thread, osPriorityHigh, 0, 128);
+  //UDPReceiveTaskHandle = osThreadCreate(osThread(UDP_Receive), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -375,7 +375,7 @@ void UDP_Send_Thread(void)
 	 }
 }
 
-void UDP_Receive_Thread(void const * argument)
+void UDP_Recv_Thread(void)
 {
 	printf("Hilo de lectura iniciado... \n");
 
@@ -399,11 +399,14 @@ void StartDefaultTask(void const * argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
-  sys_thread_new("UDP_Send", UDP_Send_Thread, NULL, DEFAULT_THREAD_STACKSIZE, osPriorityAboveNormal); // Crea la tarea de servicio para UDP
+  // Solucion Prioridad de tareas y tamaño de stack: https://community.st.com/s/question/0D53W00000BLVm8/creating-2-tcp-threads
+  sys_thread_new("UDP_Send", UDP_Send_Thread, NULL, configMINIMAL_STACK_SIZE*2, osPriorityAboveNormal); // Crea la tarea de servicio para UDP
+  sys_thread_new("UDP_Recv", UDP_Recv_Thread, NULL, configMINIMAL_STACK_SIZE*2, osPriorityNormal); // Crea la tarea de servicio para UDP
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  osDelay(1);
+	  //osThreadTerminate(NULL);
   }
   /* USER CODE END 5 */
 }
