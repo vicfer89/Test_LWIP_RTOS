@@ -25,6 +25,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "lwip/api.h"
+#include "lwip/sockets.h"
+#include "Sockets_UDP.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -333,7 +336,41 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void UDP_Send_Thread(void)
+{
+	// Creamos estructuras de datos necesarias para los envíos
+	 struct netconn *conn;
+	 struct netbuf *outbuf;
+	 int sd, sd2;
+	 u8_t dataraw[] = "Hola UDP RTOS\n";
 
+	 // Generamos IP para envío de datos
+	 ip_addr_t ipto;
+	 IP4_ADDR(&ipto,172,16,0,2);
+
+	 // Creamos conexión UDP con netconn
+	 conn = netconn_new(NETCONN_UDP);
+	 sd = Eth_UDP_Init(60000);
+	 sd2 = Eth_UDP_Init(50000);
+
+	 // Creamos buffer para envío de datos de tipo netbuf
+	 outbuf = netbuf_new();
+	 // referenciamos cadena de texto al buffer
+	 netbuf_ref(outbuf, dataraw, sizeof(dataraw));
+
+	 for(;;)
+	 {
+		 // Enviamos datos
+		 netconn_sendto(conn, outbuf, &ipto, 49000);
+		 netconn_sendto(conn, outbuf, &ipto, 49001);
+		 UDP_Send(sd, dataraw, strlen(dataraw), "172.16.0.2", 60001);
+		 UDP_Send(sd2, "Hola SD2", strlen("Hola SD2"), "172.16.0.2", 60001);
+		 osDelay(500);
+		 // Indicamos con un LED que el envío se ha hecho (parpadeo)
+		 HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		 osDelay(500);
+	 }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -348,6 +385,7 @@ void StartDefaultTask(void const * argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
+  sys_thread_new("UDP_Send", UDP_Send_Thread, NULL, DEFAULT_THREAD_STACKSIZE, osPriorityAboveNormal); // Crea la tarea de servicio para UDP
   /* Infinite loop */
   for(;;)
   {
@@ -370,7 +408,7 @@ void LedTaskInit(void const * argument)
   for(;;)
   {
 	  HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
-    osDelay(500);
+    osDelay(1000);
   }
   /* USER CODE END LedTaskInit */
 }
@@ -389,8 +427,6 @@ void LD2Task_Init(void const * argument)
   for(;;)
   {
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  osDelay(250);
-	  HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 	  osDelay(250);
   }
   /* USER CODE END LD2Task_Init */

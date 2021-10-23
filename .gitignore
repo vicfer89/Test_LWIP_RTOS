@@ -5,5 +5,5 @@ Debug/
 .settings/
 *.launch
 *.mxproject
-*.cproject
-*.project
+#*.cproject
+#*.project
