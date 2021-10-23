@@ -53,6 +53,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 osThreadId defaultTaskHandle;
 osThreadId LEDTaskHandle;
 osThreadId LD2TaskHandle;
+osThreadId UDPReceiveTaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -67,7 +68,7 @@ void LedTaskInit(void const * argument);
 void LD2Task_Init(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
+void UDP_Receive_Thread(void const * argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -143,6 +144,8 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadDef(UDP_Receive, UDP_Receive_Thread, osPriorityHigh, 0, 128);
+  UDPReceiveTaskHandle = osThreadCreate(osThread(UDP_Receive), NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -370,6 +373,17 @@ void UDP_Send_Thread(void)
 		 HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 		 osDelay(500);
 	 }
+}
+
+void UDP_Receive_Thread(void const * argument)
+{
+	printf("Hilo de lectura iniciado... \n");
+
+	for(;;)
+	{
+		osDelay(1000);
+		// A implementar
+	}
 }
 /* USER CODE END 4 */
 
