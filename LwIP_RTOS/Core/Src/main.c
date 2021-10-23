@@ -401,7 +401,7 @@ void StartDefaultTask(void const * argument)
   /* USER CODE BEGIN 5 */
   // Solucion Prioridad de tareas y tamaño de stack: https://community.st.com/s/question/0D53W00000BLVm8/creating-2-tcp-threads
   sys_thread_new("UDP_Send", UDP_Send_Thread, NULL, configMINIMAL_STACK_SIZE*2, osPriorityAboveNormal); // Crea la tarea de servicio para UDP
-  sys_thread_new("UDP_Recv", UDP_Recv_Thread, NULL, configMINIMAL_STACK_SIZE*2, osPriorityNormal); // Crea la tarea de servicio para UDP
+  sys_thread_new("UDP_Recv", UDP_Recv_Thread, NULL, configMINIMAL_STACK_SIZE*2, osPriorityRealtime); // Crea la tarea de servicio para UDP
   /* Infinite loop */
   for(;;)
   {
