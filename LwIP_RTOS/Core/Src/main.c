@@ -345,7 +345,7 @@ void UDP_Send_Thread(void)
 	 struct netconn *conn;
 	 struct netbuf *outbuf;
 	 int sd, sd2;
-	 u8_t dataraw[] = "Hola UDP RTOS\n";
+	 uint8_t dataraw[] = "Hola UDP RTOS\n";
 
 	 // Generamos IP para envío de datos
 	 ip_addr_t ipto;
