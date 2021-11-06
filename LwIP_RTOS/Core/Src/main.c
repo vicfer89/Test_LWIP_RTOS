@@ -378,10 +378,16 @@ void UDP_Send_Thread(void)
 void UDP_Recv_Thread(void)
 {
 	printf("Hilo de lectura iniciado... \n");
+	int sd;
+	sd = Eth_UDP_Init(60005); // Inicializamos puerto de escucha
+	uint8_t buffer[256];
 
 	for(;;)
 	{
-		osDelay(1000);
+		if(UDP_Recv(sd, buffer, 256) > 0)
+		{
+			printf("Ha llegado algo a UDP....");
+		}
 		// A implementar
 	}
 }
