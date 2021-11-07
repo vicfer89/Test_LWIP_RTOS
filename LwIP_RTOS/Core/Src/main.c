@@ -387,6 +387,7 @@ void UDP_Recv_Thread(void)
 		if(UDP_Recv(sd, buffer, 256) > 0)
 		{
 			printf("Ha llegado algo a UDP....\n");
+			printf("Recibido: %s\n", buffer);
 		}
 		// A implementar
 	}
